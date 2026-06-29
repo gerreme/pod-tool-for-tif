@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>POD Tool for TIF Beta</title>
+    <title>P.O.D Tool for TIF</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --sidebar-color: #1e1e1e;
-            --text-color: #e0e0e0;
+            --bg-color: #0d0d11;
+            --sidebar-color: #16161f;
+            --panel-item-bg: #20202b;
+            --text-color: #e2e8f0;
+            --text-muted: #70778b;
             --accent-color: #6366f1;
-            --border-color: #333333;
-            --danger-color: #ef4444;
+            --border-color: #262636;
+            --danger-color: #f43f5e;
             --success-color: #10b981;
         }
 
@@ -25,62 +27,72 @@
             overflow: hidden;
         }
 
+        /* --- COMPACT SIDEBAR LAYOUT --- */
         #sidebar {
-            width: 340px;
+            width: 320px;
             background-color: var(--sidebar-color);
             border-right: 1px solid var(--border-color);
-            padding: 20px;
+            padding: 16px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
             overflow-y: auto;
             z-index: 10;
         }
 
         h2 {
             margin: 0;
-            font-size: 1.2rem;
-            font-weight: 600;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #fff;
         }
 
         .section-title {
-            font-size: 0.75rem;
-            color: #aaa;
+            font-size: 0.7rem;
+            color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 15px 0 5px 0;
+            margin: 10px 0 2px 0;
             font-weight: 700;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 4px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         label {
-            font-size: 0.8rem;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.75rem;
+            color: #94a3b8;
             font-weight: 600;
         }
 
         input[type="text"], textarea, input[type="file"], select {
-            background: #2a2a2a;
+            background: var(--panel-item-bg);
             border: 1px solid var(--border-color);
-            padding: 10px;
+            padding: 8px 10px;
             border-radius: 6px;
             color: #fff;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
             font-family: inherit;
+            width: 100%;
+            box-sizing: border-box;
+            transition: border-color 0.15s;
         }
 
         textarea {
             resize: vertical;
-            min-height: 60px;
+            min-height: 48px;
         }
 
         input:focus, textarea:focus, select:focus {
@@ -90,52 +102,66 @@
         .font-row {
             display: grid;
             grid-template-columns: 1fr auto;
-            gap: 8px;
+            gap: 6px;
         }
 
-        .font-row button {
-            margin: 0;
-            padding: 0 12px;
+        .font-selector-wrapper {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 6px;
+            align-items: center;
         }
 
         button {
             background-color: var(--accent-color);
             color: white;
             border: none;
-            padding: 12px;
+            padding: 8px 12px;
             border-radius: 6px;
             font-weight: 600;
+            font-size: 0.85rem;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.15s, opacity 0.15s;
         }
 
-        button:hover {
-            background-color: #4f46e5;
+        button:hover:not(:disabled) {
+            opacity: 0.9;
         }
 
-        button:disabled {
-            background-color: #444;
-            color: #777;
+        #removeFontBtn {
+            background-color: var(--panel-item-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+        #removeFontBtn:hover:not(:disabled) {
+            background-color: var(--danger-color);
+            color: #fff;
+            border-color: var(--danger-color);
+        }
+        #removeFontBtn:disabled {
+            opacity: 0.2;
             cursor: not-allowed;
         }
 
         #layer-container {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            min-height: 100px;
-            max-height: 180px;
+            gap: 4px;
+            min-height: 80px;
+            max-height: 140px;
             overflow-y: auto;
             border: 1px solid var(--border-color);
-            padding: 8px;
+            padding: 6px;
             border-radius: 6px;
-            background: #111111;
+            background: #09090d;
             box-sizing: border-box;
         }
 
         .empty-layers-placeholder {
-            color: #555;
-            font-size: 0.85rem;
+            color: #475569;
+            font-size: 0.8rem;
             text-align: center;
             margin: auto;
             font-style: italic;
@@ -145,38 +171,31 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 10px;
-            background: #252525;
-            border-radius: 6px;
+            padding: 6px 10px;
+            background: var(--panel-item-bg);
+            border-radius: 5px;
             cursor: pointer;
             border: 1px solid transparent;
-            font-size: 0.85rem;
-            transition: all 0.15s ease;
-        }
-
-        .layer-item:hover {
-            background: #2a2a2a;
+            font-size: 0.8rem;
         }
 
         .layer-item.active {
             border-color: var(--accent-color);
-            background: #23223c;
+            background: #1e1b4b;
         }
 
         .layer-item span {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            max-width: 200px;
+            max-width: 180px;
         }
 
         .delete-layer-btn {
             background: transparent;
-            color: #888;
-            padding: 4px 8px;
-            font-size: 0.75rem;
-            border-radius: 4px;
-            font-weight: bold;
+            color: var(--text-muted);
+            padding: 2px 6px;
+            font-size: 0.7rem;
         }
         .delete-layer-btn:hover {
             background: var(--danger-color);
@@ -185,55 +204,54 @@
 
         #addLayerBtn {
             background-color: #2563eb;
-            padding: 10px;
-            font-size: 0.85rem;
-        }
-        #addLayerBtn:hover {
-            background-color: #1d4ed8;
+            padding: 8px;
+            font-size: 0.8rem;
         }
 
-        /* --- EXPORT STRIP CONFIG --- */
         .export-row {
             margin-top: auto;
             display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 8px;
-        }
-
-        #exportFormat {
-            background-color: #2a2a2a;
-            font-weight: 600;
-            text-align: center;
+            grid-template-columns: 75px 1fr;
+            gap: 6px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
         }
 
         #exportBtn {
             background-color: var(--success-color);
         }
-        #exportBtn:hover {
-            background-color: #059669;
+        #exportBtn:disabled {
+            background-color: #1e293b;
+            color: #64748b;
+            cursor: not-allowed;
         }
 
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-color);
+            margin: 4px 0;
+        }
+
+        /* --- INTERACTIVE VIEWPORT ENGINE OVERLAYS --- */
         #preview-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
-            background: #0a0a0a;
+            background: #060608;
             position: relative;
             user-select: none;
+            overflow: hidden;
         }
 
         #canvas-wrapper {
             position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            cursor: default;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            transform-origin: center center;
         }
 
         canvas {
             display: block;
-            max-width: 100%;
-            max-height: 85vh;
         }
 
         #drop-overlay {
@@ -242,18 +260,62 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(99, 102, 241, 0.15);
-            border: 3px dashed var(--accent-color);
+            background: rgba(99, 102, 241, 0.1);
+            border: 2px dashed var(--accent-color);
             box-sizing: border-box;
             display: none;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 600;
             pointer-events: none;
             z-index: 100;
-            backdrop-filter: blur(4px);
+            backdrop-filter: blur(2px);
+        }
+
+        /* Floating Viewport Tool HUD */
+        .viewport-hud {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 22, 31, 0.85);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px);
+            padding: 6px 10px;
+            border-radius: 30px;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+        }
+
+        .viewport-hud button {
+            background: transparent;
+            color: #94a3b8;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border-radius: 20px;
+        }
+
+        .viewport-hud button:hover {
+            background: var(--panel-item-bg);
+            color: #fff;
+        }
+
+        .viewport-hud .divider {
+            width: 1px;
+            height: 16px;
+            background: var(--border-color);
+            margin: 0 4px;
+        }
+
+        .hud-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 0 4px;
         }
     </style>
 </head>
@@ -262,49 +324,41 @@
     <div id="drop-overlay">Drop Image Here to Load</div>
 
     <div id="sidebar">
-        <h2>POD Tool for TIF Beta</h2>
-        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0;">
+        <h2>P.O.D Tool for TIF</h2>
         
         <div class="control-group">
-            <label>1. Target Image</label>
+            <label>Target File Source</label>
             <input type="file" id="imageLoader" accept="image/*">
-            <span style="font-size: 0.75rem; color: #666; margin-top: 2px;">Tip: You can also Ctrl+V paste or drag files directly anywhere.</span>
         </div>
 
-        <div class="section-title">Layers Management</div>
+        <div class="section-title">Layers</div>
         <div id="layer-container">
-            <div class="empty-layers-placeholder">Upload, drag, or paste an image to start</div>
+            <div class="empty-layers-placeholder">Import image to begin customization</div>
         </div>
-        <button type="button" id="addLayerBtn">+ Add New Text Layer</button>
+        <button type="button" id="addLayerBtn">+ Add Text Layer</button>
 
-        <div class="section-title">Active Layer Settings</div>
+        <div class="section-title">Typography & Properties</div>
 
         <div class="control-group">
-            <label>Watermark Content</label>
-            <textarea id="watermarkText" placeholder="Type your text here...">John Doe&#10;Digital Signature</textarea>
+            <label>Watermark Value</label>
+            <textarea id="watermarkText" placeholder="Type text context..."></textarea>
         </div>
 
         <div class="control-group">
-            <label>Import Google Font</label>
+            <label>Fetch Google Font</label>
             <div class="font-row">
-                <input type="text" id="gFontInput" placeholder="e.g., Montserrat, Popins">
+                <input type="text" id="gFontInput" placeholder="e.g., Montserrat, Poppins">
                 <button type="button" id="loadGFontBtn">Load</button>
             </div>
         </div>
 
-        <div class="control-group">
-            <label>Upload Custom Font File</label>
-            <input type="file" id="fontUploader" accept=".ttf,.otf,.woff,.woff2">
-        </div>
-
-        <div class="control-group">
-            <label>Active Font Style</label>
-            <div class="font-row">
-                <select id="fontFamily">
-                    <option value="Arial">Sans-Serif (Arial)</option>
-                    <option value="Georgia">Serif (Georgia)</option>
-                    <option value="Courier New">Monospace</option>
-                </select>
+        <div class="grid-2">
+            <div class="control-group">
+                <label>Upload Font File</label>
+                <input type="file" id="fontUploader" accept=".ttf,.otf,.woff,.woff2" style="padding:5px; font-size:0.75rem;">
+            </div>
+            <div class="control-group">
+                <label>Color Profile</label>
                 <select id="fontColor">
                     <option value="#ffffff">White</option>
                     <option value="#000000">Black</option>
@@ -316,18 +370,31 @@
         </div>
 
         <div class="control-group">
-            <label>Text Size</label>
-            <input type="range" id="sizeRange" min="10" max="200" value="40">
+            <label>Active Typeface Asset</label>
+            <div class="font-selector-wrapper">
+                <select id="fontFamily">
+                    <option value="Arial" data-system="true">Sans-Serif (Arial)</option>
+                    <option value="Georgia" data-system="true">Serif (Georgia)</option>
+                    <option value="Courier New" data-system="true">Monospace</option>
+                </select>
+                <button type="button" id="removeFontBtn" title="Delete from system storage">✕</button>
+            </div>
+        </div>
+
+        <div class="grid-2">
+            <div class="control-group">
+                <label>Size</label>
+                <input type="range" id="sizeRange" min="10" max="200" value="40">
+            </div>
+            <div class="control-group">
+                <label>Opacity</label>
+                <input type="range" id="opacityRange" min="0" max="1" step="0.05" value="0.8">
+            </div>
         </div>
 
         <div class="control-group">
-            <label>Rotation (Degrees)</label>
+            <label>Text Rotation (Degrees)</label>
             <input type="range" id="rotateRange" min="-180" max="180" value="0">
-        </div>
-
-        <div class="control-group">
-            <label>Opacity</label>
-            <input type="range" id="opacityRange" min="0" max="1" step="0.05" value="0.8">
         </div>
 
         <div class="export-row">
@@ -335,11 +402,21 @@
                 <option value="image/png">.PNG</option>
                 <option value="image/jpeg">.JPG</option>
             </select>
-            <button id="exportBtn" disabled>Download Image</button>
+            <button id="exportBtn" disabled>Export Master</button>
         </div>
     </div>
 
     <div id="preview-container">
+        <div class="viewport-hud">
+            <span class="hud-hint">Image Viewport:</span>
+            <button id="hudZoomIn" title="Zoom In">+</button>
+            <button id="hudZoomOut" title="Zoom Out">−</button>
+            <button id="hudRotLeft" title="Rotate Counter-Clockwise">⟲</button>
+            <button id="hudRotRight" title="Rotate Clockwise">⟳</button>
+            <div class="divider"></div>
+            <button id="hudReset" style="color: var(--accent-color);">Reset Layout</button>
+        </div>
+
         <div id="canvas-wrapper">
             <canvas id="canvas"></canvas>
         </div>
@@ -350,8 +427,9 @@
         const ctx = canvas.getContext('2d');
         const canvasWrapper = document.getElementById('canvas-wrapper');
         const dropOverlay = document.getElementById('drop-overlay');
+        const previewContainer = document.getElementById('preview-container');
 
-        // Inputs
+        // UI inputs
         const imageLoader = document.getElementById('imageLoader');
         const watermarkText = document.getElementById('watermarkText');
         const sizeRange = document.getElementById('sizeRange');
@@ -366,12 +444,57 @@
         const exportFormat = document.getElementById('exportFormat');
         const layerContainer = document.getElementById('layer-container');
         const addLayerBtn = document.getElementById('addLayerBtn');
+        const removeFontBtn = document.getElementById('removeFontBtn');
+
+        // Viewport Action Buttons
+        const hudZoomIn = document.getElementById('hudZoomIn');
+        const hudZoomOut = document.getElementById('hudZoomOut');
+        const hudRotLeft = document.getElementById('hudRotLeft');
+        const hudRotRight = document.getElementById('hudRotRight');
+        const hudReset = document.getElementById('hudReset');
 
         let img = new Image();
         let currentImgSrc = null; 
         let layers = [];
         let activeLayerId = null;
-        let isDragging = false;
+
+        // Interactive Tracking Matrices
+        let isDraggingText = false;
+        let isPanningCanvas = false;
+
+        // Canvas Viewport Transforms State Machine
+        let canvasScale = 1;
+        let canvasPanX = 0;
+        let canvasPanY = 0;
+        let canvasRotation = 0; // Degrees
+
+        let startX, startY; // Workspace coordinates cache pointers
+
+        // --- BACKGROUND TRANSFORM WORKER LOOPS ---
+        function applyTransformations() {
+            canvasWrapper.style.transform = `translate(${canvasPanX}px, ${canvasPanY}px) scale(${canvasScale}) rotate(${canvasRotation}deg)`;
+        }
+
+        hudZoomIn.addEventListener('click', () => { canvasScale = Math.min(4, canvasScale + 0.15); applyTransformations(); });
+        hudZoomOut.addEventListener('click', () => { canvasScale = Math.max(0.2, canvasScale - 0.15); applyTransformations(); });
+        hudRotLeft.addEventListener('click', () => { canvasRotation -= 15; applyTransformations(); });
+        hudRotRight.addEventListener('click', () => { canvasRotation += 15; applyTransformations(); });
+        hudReset.addEventListener('click', () => {
+            canvasScale = 1;
+            canvasPanX = 0;
+            canvasPanY = 0;
+            canvasRotation = 0;
+            applyTransformations();
+        });
+
+        // Track Zoom via Mouse Scroll Wheel
+        previewContainer.addEventListener('wheel', (e) => {
+            if (!img.src) return;
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? -0.08 : 0.08;
+            canvasScale = Math.max(0.15, Math.min(5, canvasScale + delta));
+            applyTransformations();
+        }, { passive: false });
 
         // --- LOCAL STORAGE FONTS ENGINE ---
         function getSavedFonts() {
@@ -387,25 +510,81 @@
             }
         }
 
-        function injectGoogleFontDOM(fontName) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.className = 'loaded-gfont-node';
-            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
-            document.head.appendChild(link);
+        function removeFontFromLocalStorage(fontName) {
+            let fonts = getSavedFonts();
+            fonts = fonts.filter(f => f !== fontName);
+            localStorage.setItem('wms_saved_gfonts', JSON.stringify(fonts));
+        }
 
-            const option = document.createElement('option');
-            option.value = fontName;
-            option.textContent = `Google: ${fontName}`;
-            fontFamily.appendChild(option);
+        function injectGoogleFontDOM(fontName) {
+            const idSafe = fontName.replace(/ /g, '-');
+            const existingLink = document.getElementById(`gfont-link-${idSafe}`);
+            if (!existingLink) {
+                const link = document.createElement('link');
+                link.id = `gfont-link-${idSafe}`;
+                link.rel = 'stylesheet';
+                link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+                document.head.appendChild(link);
+            }
+
+            let choiceExists = false;
+            for (let opt of fontFamily.options) {
+                if (opt.value === fontName) { choiceExists = true; break; }
+            }
+
+            if (!choiceExists) {
+                const option = document.createElement('option');
+                option.value = fontName;
+                option.textContent = `Google: ${fontName}`;
+                fontFamily.appendChild(option);
+            }
         }
 
         function loadSavedFontsOnStartup() {
             const fonts = getSavedFonts();
             fonts.forEach(font => injectGoogleFontDOM(font));
+            toggleRemoveFontButtonState();
         }
 
-        function createLayer(text = "New Watermark", x = 50, y = 50) {
+        function toggleRemoveFontButtonState() {
+            const selectedOption = fontFamily.options[fontFamily.selectedIndex];
+            if (selectedOption && selectedOption.hasAttribute('data-system')) {
+                removeFontBtn.disabled = true;
+            } else {
+                removeFontBtn.disabled = false;
+            }
+        }
+
+        removeFontBtn.addEventListener('click', () => {
+            const index = fontFamily.selectedIndex;
+            const targetFont = fontFamily.value;
+            const selectedOption = fontFamily.options[index];
+
+            if (selectedOption && selectedOption.hasAttribute('data-system')) return;
+
+            fontFamily.remove(index);
+            removeFontFromLocalStorage(targetFont);
+
+            const linkNode = document.getElementById(`gfont-link-${targetFont.replace(/ /g, '-')}`);
+            if (linkNode) linkNode.remove();
+
+            layers.forEach(l => {
+                if (l.fontFamily === targetFont) l.fontFamily = "Arial";
+            });
+
+            fontFamily.value = "Arial";
+            syncActiveLayerFromUI();
+            toggleRemoveFontButtonState();
+            drawAll();
+        });
+
+        fontFamily.addEventListener('change', () => {
+            toggleRemoveFontButtonState();
+            syncActiveLayerFromUI();
+            drawAll();
+        });
+
+        function createLayer(text = "Watermark Signature", x = 50, y = 50) {
             return {
                 id: Date.now() + Math.random().toString(36).substr(2, 5),
                 text: text,
@@ -432,11 +611,11 @@
             opacityRange.value = activeLayer.opacity;
             fontFamily.value = activeLayer.fontFamily;
             fontColor.value = activeLayer.fontColor;
+            toggleRemoveFontButtonState();
         }
 
         function renderLayerList() {
             layerContainer.innerHTML = "";
-            
             if (layers.length === 0) {
                 layerContainer.innerHTML = '<div class="empty-layers-placeholder">No layers added yet</div>';
                 return;
@@ -497,7 +676,7 @@
             activeLayer.fontColor = fontColor.value;
         }
 
-        [watermarkText, sizeRange, rotateRange, opacityRange, fontFamily, fontColor].forEach(el => {
+        [watermarkText, sizeRange, rotateRange, opacityRange, fontColor].forEach(el => {
             el.addEventListener('input', () => {
                 syncActiveLayerFromUI();
                 if (el === watermarkText) renderLayerList();
@@ -507,13 +686,9 @@
 
         function loadImageFromBlob(file) {
             if (!file || !file.type.startsWith('image/')) return;
-            
-            if (currentImgSrc) {
-                URL.revokeObjectURL(currentImgSrc);
-            }
+            if (currentImgSrc) URL.revokeObjectURL(currentImgSrc);
             
             currentImgSrc = URL.createObjectURL(file);
-            
             img.onload = () => {
                 canvas.width = img.width;
                 canvas.height = img.height;
@@ -528,11 +703,17 @@
                 renderLayerList();
                 drawAll();
                 exportBtn.disabled = false;
+                
+                // Autofit resets on completely new image asset allocations
+                canvasScale = 1;
+                canvasPanX = 0;
+                canvasPanY = 0;
+                canvasRotation = 0;
+                applyTransformations();
             }
             img.src = currentImgSrc;
         }
 
-        // Image Handling Hooks
         imageLoader.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
 
         window.addEventListener('paste', (e) => {
@@ -554,25 +735,21 @@
             if (e.dataTransfer.files.length > 0) loadImageFromBlob(e.dataTransfer.files[0]);
         });
 
-        // Google Fonts Core Trigger
         loadGFontBtn.addEventListener('click', () => {
             const fontName = gFontInput.value.trim();
             if (!fontName) return;
-
             injectGoogleFontDOM(fontName);
             saveFontToLocalStorage(fontName);
             fontFamily.value = fontName;
-            
             gFontInput.value = "";
             syncActiveLayerFromUI();
+            toggleRemoveFontButtonState();
             setTimeout(drawAll, 800);
         });
 
-        // Local file fonts
         fontUploader.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
-
             const fontName = file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '');
             const reader = new FileReader();
             
@@ -581,14 +758,13 @@
                 try {
                     const loadedFace = await fontFace.load();
                     document.fonts.add(loadedFace);
-                    
                     const option = document.createElement('option');
                     option.value = fontName;
                     option.textContent = `Local: ${file.name}`;
                     fontFamily.appendChild(option);
                     fontFamily.value = fontName;
-                    
                     syncActiveLayerFromUI();
+                    toggleRemoveFontButtonState();
                     drawAll();
                 } catch (err) {
                     alert("Error processing your font file layout.");
@@ -597,13 +773,11 @@
             reader.readAsArrayBuffer(file);
         });
 
-        // Canvas Rendering Frame
+        // Core Render Matrix Engine Loop
         function drawAll(isExportingJpg = false) {
             if (!img.src) return;
-
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // If saving as JPG, fill transparency drops with clean white base color first
             if (isExportingJpg) {
                 ctx.fillStyle = "#ffffff";
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -613,7 +787,6 @@
 
             layers.forEach(layer => {
                 ctx.save();
-
                 const xPos = (layer.xPercent / 100) * canvas.width;
                 const yPos = (layer.yPercent / 100) * canvas.height;
 
@@ -644,26 +817,62 @@
                     ctx.fill();
                     ctx.stroke();
                 }
-
                 ctx.restore();
             });
         }
 
-        // Workspace Navigation Mouse tracking
+        // --- COORDINATE MATRIX TRANSFORMATION RESOLVER ---
         function getCanvasMousePos(e) {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
+            
+            // Unwind structural DOM metrics factoring current transform steps cleanly
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+
+            // Calculate positional variables relative to center of the canvas element context bounds
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+
+            let rx = clientX - cx;
+            let ry = clientY - cy;
+
+            // Unwind Rotation factor
+            const rad = (-canvasRotation * Math.PI) / 180;
+            const rotX = rx * Math.cos(rad) - ry * Math.sin(rad);
+            const rotY = rx * Math.sin(rad) + ry * Math.cos(rad);
+
+            // Factor structural Scale metrics safely
+            const unscaledX = rotX / canvasScale;
+            const unscaledY = rotY / canvasScale;
+
+            return {
+                x: unscaledX + canvas.width / 2,
+                y: unscaledY + canvas.height / 2
+            };
         }
 
+        // --- GLOBAL WORKSPACE EVENT MUXING CONTROLLERS ---
         function handleStart(e) {
-            if (!img.src || layers.length === 0) return;
+            if (!img.src) return;
+
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            startX = clientX;
+            startY = clientY;
+
+            // Shift Key or Middle-click triggers Viewport Panning immediately
+            if (e.shiftKey || e.button === 1 || e.target === previewContainer) {
+                isPanningCanvas = true;
+                previewContainer.style.cursor = 'grabbing';
+                return;
+            }
+
+            if (layers.length === 0) return;
+            
             const pos = getCanvasMousePos(e);
             let closestLayer = null;
-            let minDist = 120; 
+            let minDist = 80 / canvasScale; // Compensate selection range thresholds based on Zoom configuration factors
 
             layers.forEach(layer => {
                 const lx = (layer.xPercent / 100) * canvas.width;
@@ -674,17 +883,37 @@
 
             if (closestLayer) {
                 activeLayerId = closestLayer.id;
-                isDragging = true;
+                isDraggingText = true;
                 canvasWrapper.style.cursor = 'grabbing';
                 updateEditorUI();
                 renderLayerList();
                 drawAll();
+            } else {
+                // Clicking on empty spots triggers background image panning
+                isPanningCanvas = true;
+                previewContainer.style.cursor = 'grabbing';
             }
         }
 
         function handleMove(e) {
-            if (!isDragging) return;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            if (isPanningCanvas) {
+                e.preventDefault();
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                canvasPanX += dx;
+                canvasPanY += dy;
+                startX = clientX;
+                startY = clientY;
+                applyTransformations();
+                return;
+            }
+
+            if (!isDraggingText) return;
             e.preventDefault();
+            
             const pos = getCanvasMousePos(e);
             const activeLayer = layers.find(l => l.id === activeLayerId);
             if (activeLayer) {
@@ -694,42 +923,50 @@
             }
         }
 
-        canvasWrapper.addEventListener('mousedown', handleStart);
-        window.addEventListener('mousemove', handleMove);
-        window.addEventListener('mouseup', () => { isDragging = false; canvasWrapper.style.cursor = 'default'; });
-        canvasWrapper.addEventListener('touchstart', handleStart, { passive: false });
-        window.addEventListener('touchmove', handleMove, { passive: false });
-        window.addEventListener('touchend', () => { isDragging = false; });
+        function handleEnd() {
+            isDraggingText = false;
+            isPanningCanvas = false;
+            previewContainer.style.cursor = 'default';
+            canvasWrapper.style.cursor = 'default';
+        }
 
-        // --- ENHANCED DUAL FORMAT EXPORT WORKER ---
+        // Attach Multi-Mux System listeners
+        canvasWrapper.addEventListener('mousedown', handleStart);
+        previewContainer.addEventListener('mousedown', handleStart);
+        
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', handleEnd);
+
+        canvasWrapper.addEventListener('touchstart', handleStart, { passive: false });
+        previewContainer.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', handleEnd);
+
+        // PRODUCTION EXPORT DRIVER
         exportBtn.addEventListener('click', () => {
             if (!img.src) return;
-            
             try {
                 const currentActiveId = activeLayerId;
                 const format = exportFormat.value; 
                 const isJpg = (format === 'image/jpeg');
 
                 activeLayerId = null; 
-                // Re-draw context with formatting updates (like background flattening for JPG format)
                 drawAll(isJpg);
                 
                 const ext = isJpg ? 'jpg' : 'png';
                 const link = document.createElement('a');
                 link.download = `watermarked_output.${ext}`;
-                link.href = canvas.toDataURL(format, isJpg ? 0.92 : undefined); // 92% compression profile quality choice on JPEG exports
+                link.href = canvas.toDataURL(format, isJpg ? 0.95 : undefined); 
                 link.click();
                 
-                // Roll back preview UI configuration states
                 activeLayerId = currentActiveId;
                 drawAll(false);
             } catch (error) {
                 console.error("Export failed:", error);
-                alert("Security lock encountered during file processing. Please try saving the file locally on your machine and uploading it through the file selector instead.");
+                alert("Security block encountered during file processing.");
             }
         });
         
-        // Load initial elements
         loadSavedFontsOnStartup();
         renderLayerList();
     </script>
