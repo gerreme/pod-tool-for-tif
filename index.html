@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POD Tool for TIF Beta</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --sidebar-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --accent-color: #6366f1;
+            --border-color: #333333;
+            --danger-color: #ef4444;
+            --success-color: #10b981;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: 340px;
+            background-color: var(--sidebar-color);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 15px 0 5px 0;
+            font-weight: 700;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-size: 0.8rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        input[type="text"], textarea, input[type="file"], select {
+            background: #2a2a2a;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 0.9rem;
+            outline: none;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent-color);
+        }
+
+        .font-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+        }
+
+        .font-row button {
+            margin: 0;
+            padding: 0 12px;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #4f46e5;
+        }
+
+        button:disabled {
+            background-color: #444;
+            color: #777;
+            cursor: not-allowed;
+        }
+
+        #layer-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            min-height: 100px;
+            max-height: 180px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 6px;
+            background: #111111;
+            box-sizing: border-box;
+        }
+
+        .empty-layers-placeholder {
+            color: #555;
+            font-size: 0.85rem;
+            text-align: center;
+            margin: auto;
+            font-style: italic;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #252525;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            font-size: 0.85rem;
+            transition: all 0.15s ease;
+        }
+
+        .layer-item:hover {
+            background: #2a2a2a;
+        }
+
+        .layer-item.active {
+            border-color: var(--accent-color);
+            background: #23223c;
+        }
+
+        .layer-item span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+
+        .delete-layer-btn {
+            background: transparent;
+            color: #888;
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .delete-layer-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        #addLayerBtn {
+            background-color: #2563eb;
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+        #addLayerBtn:hover {
+            background-color: #1d4ed8;
+        }
+
+        /* --- EXPORT STRIP CONFIG --- */
+        .export-row {
+            margin-top: auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 8px;
+        }
+
+        #exportFormat {
+            background-color: #2a2a2a;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        #exportBtn {
+            background-color: var(--success-color);
+        }
+        #exportBtn:hover {
+            background-color: #059669;
+        }
+
+        #preview-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            background: #0a0a0a;
+            position: relative;
+            user-select: none;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            cursor: default;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 85vh;
+        }
+
+        #drop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(99, 102, 241, 0.15);
+            border: 3px dashed var(--accent-color);
+            box-sizing: border-box;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            pointer-events: none;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="drop-overlay">Drop Image Here to Load</div>
+
+    <div id="sidebar">
+        <h2>POD Tool for TIF Beta</h2>
+        <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0;">
+        
+        <div class="control-group">
+            <label>1. Target Image</label>
+            <input type="file" id="imageLoader" accept="image/*">
+            <span style="font-size: 0.75rem; color: #666; margin-top: 2px;">Tip: You can also Ctrl+V paste or drag files directly anywhere.</span>
+        </div>
+
+        <div class="section-title">Layers Management</div>
+        <div id="layer-container">
+            <div class="empty-layers-placeholder">Upload, drag, or paste an image to start</div>
+        </div>
+        <button type="button" id="addLayerBtn">+ Add New Text Layer</button>
+
+        <div class="section-title">Active Layer Settings</div>
+
+        <div class="control-group">
+            <label>Watermark Content</label>
+            <textarea id="watermarkText" placeholder="Type your text here...">John Doe&#10;Digital Signature</textarea>
+        </div>
+
+        <div class="control-group">
+            <label>Import Google Font</label>
+            <div class="font-row">
+                <input type="text" id="gFontInput" placeholder="e.g., Montserrat, Popins">
+                <button type="button" id="loadGFontBtn">Load</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Upload Custom Font File</label>
+            <input type="file" id="fontUploader" accept=".ttf,.otf,.woff,.woff2">
+        </div>
+
+        <div class="control-group">
+            <label>Active Font Style</label>
+            <div class="font-row">
+                <select id="fontFamily">
+                    <option value="Arial">Sans-Serif (Arial)</option>
+                    <option value="Georgia">Serif (Georgia)</option>
+                    <option value="Courier New">Monospace</option>
+                </select>
+                <select id="fontColor">
+                    <option value="#ffffff">White</option>
+                    <option value="#000000">Black</option>
+                    <option value="#f59e0b">Gold</option>
+                    <option value="#ef4444">Red</option>
+                    <option value="#3b82f6">Blue</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Text Size</label>
+            <input type="range" id="sizeRange" min="10" max="200" value="40">
+        </div>
+
+        <div class="control-group">
+            <label>Rotation (Degrees)</label>
+            <input type="range" id="rotateRange" min="-180" max="180" value="0">
+        </div>
+
+        <div class="control-group">
+            <label>Opacity</label>
+            <input type="range" id="opacityRange" min="0" max="1" step="0.05" value="0.8">
+        </div>
+
+        <div class="export-row">
+            <select id="exportFormat">
+                <option value="image/png">.PNG</option>
+                <option value="image/jpeg">.JPG</option>
+            </select>
+            <button id="exportBtn" disabled>Export Master</button>
+        </div>
+    </div>
+
+    <div id="preview-container">
+        <div id="canvas-wrapper">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const canvasWrapper = document.getElementById('canvas-wrapper');
+        const dropOverlay = document.getElementById('drop-overlay');
+
+        // Inputs
+        const imageLoader = document.getElementById('imageLoader');
+        const watermarkText = document.getElementById('watermarkText');
+        const sizeRange = document.getElementById('sizeRange');
+        const rotateRange = document.getElementById('rotateRange');
+        const opacityRange = document.getElementById('opacityRange');
+        const fontFamily = document.getElementById('fontFamily');
+        const fontColor = document.getElementById('fontColor');
+        const gFontInput = document.getElementById('gFontInput');
+        const loadGFontBtn = document.getElementById('loadGFontBtn');
+        const fontUploader = document.getElementById('fontUploader');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportFormat = document.getElementById('exportFormat');
+        const layerContainer = document.getElementById('layer-container');
+        const addLayerBtn = document.getElementById('addLayerBtn');
+
+        let img = new Image();
+        let currentImgSrc = null; 
+        let layers = [];
+        let activeLayerId = null;
+        let isDragging = false;
+
+        // --- LOCAL STORAGE FONTS ENGINE ---
+        function getSavedFonts() {
+            const saved = localStorage.getItem('wms_saved_gfonts');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveFontToLocalStorage(fontName) {
+            let fonts = getSavedFonts();
+            if (!fonts.includes(fontName)) {
+                fonts.push(fontName);
+                localStorage.setItem('wms_saved_gfonts', JSON.stringify(fonts));
+            }
+        }
+
+        function injectGoogleFontDOM(fontName) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.className = 'loaded-gfont-node';
+            link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}&display=swap`;
+            document.head.appendChild(link);
+
+            const option = document.createElement('option');
+            option.value = fontName;
+            option.textContent = `Google: ${fontName}`;
+            fontFamily.appendChild(option);
+        }
+
+        function loadSavedFontsOnStartup() {
+            const fonts = getSavedFonts();
+            fonts.forEach(font => injectGoogleFontDOM(font));
+        }
+
+        function createLayer(text = "New Watermark", x = 50, y = 50) {
+            return {
+                id: Date.now() + Math.random().toString(36).substr(2, 5),
+                text: text,
+                xPercent: x,
+                yPercent: y,
+                size: 40,
+                rotation: 0,
+                opacity: 0.8,
+                fontFamily: fontFamily.value || "Arial",
+                fontColor: fontColor.value || "#ffffff"
+            };
+        }
+
+        function updateEditorUI() {
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer) {
+                watermarkText.value = "";
+                return;
+            }
+
+            watermarkText.value = activeLayer.text;
+            sizeRange.value = activeLayer.size;
+            rotateRange.value = activeLayer.rotation;
+            opacityRange.value = activeLayer.opacity;
+            fontFamily.value = activeLayer.fontFamily;
+            fontColor.value = activeLayer.fontColor;
+        }
+
+        function renderLayerList() {
+            layerContainer.innerHTML = "";
+            
+            if (layers.length === 0) {
+                layerContainer.innerHTML = '<div class="empty-layers-placeholder">No layers added yet</div>';
+                return;
+            }
+
+            layers.forEach((layer, index) => {
+                const item = document.createElement('div');
+                item.className = `layer-item ${layer.id === activeLayerId ? 'active' : ''}`;
+                item.onclick = () => {
+                    activeLayerId = layer.id;
+                    updateEditorUI();
+                    renderLayerList();
+                    drawAll();
+                };
+
+                const title = document.createElement('span');
+                title.textContent = `${index + 1}. ${layer.text.split('\n')[0] || 'Empty Text'}`;
+                
+                const delBtn = document.createElement('button');
+                delBtn.className = 'delete-layer-btn';
+                delBtn.textContent = '✕';
+                delBtn.type = 'button';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    layers = layers.filter(l => l.id !== layer.id);
+                    if (activeLayerId === layer.id) {
+                        activeLayerId = layers.length ? layers[0].id : null;
+                    }
+                    updateEditorUI();
+                    renderLayerList();
+                    drawAll();
+                };
+
+                item.appendChild(title);
+                item.appendChild(delBtn);
+                layerContainer.appendChild(item);
+            });
+        }
+
+        addLayerBtn.addEventListener('click', () => {
+            const newLayer = createLayer("Watermark Text Layer", 50, 40 + (layers.length * 8) % 40);
+            layers.push(newLayer);
+            activeLayerId = newLayer.id;
+            updateEditorUI();
+            renderLayerList();
+            drawAll();
+        });
+
+        function syncActiveLayerFromUI() {
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (!activeLayer) return;
+
+            activeLayer.text = watermarkText.value;
+            activeLayer.size = parseInt(sizeRange.value);
+            activeLayer.rotation = parseInt(rotateRange.value);
+            activeLayer.opacity = parseFloat(opacityRange.value);
+            activeLayer.fontFamily = fontFamily.value;
+            activeLayer.fontColor = fontColor.value;
+        }
+
+        [watermarkText, sizeRange, rotateRange, opacityRange, fontFamily, fontColor].forEach(el => {
+            el.addEventListener('input', () => {
+                syncActiveLayerFromUI();
+                if (el === watermarkText) renderLayerList();
+                drawAll();
+            });
+        });
+
+        function loadImageFromBlob(file) {
+            if (!file || !file.type.startsWith('image/')) return;
+            
+            if (currentImgSrc) {
+                URL.revokeObjectURL(currentImgSrc);
+            }
+            
+            currentImgSrc = URL.createObjectURL(file);
+            
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                if (layers.length === 0) {
+                    const defaultLayer = createLayer("John Doe\nDigital Signature", 50, 50);
+                    layers.push(defaultLayer);
+                    activeLayerId = defaultLayer.id;
+                }
+                
+                updateEditorUI();
+                renderLayerList();
+                drawAll();
+                exportBtn.disabled = false;
+            }
+            img.src = currentImgSrc;
+        }
+
+        // Image Handling Hooks
+        imageLoader.addEventListener('change', (e) => loadImageFromBlob(e.target.files[0]));
+
+        window.addEventListener('paste', (e) => {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1) {
+                    loadImageFromBlob(items[i].getAsFile());
+                    break;
+                }
+            }
+        });
+
+        window.addEventListener('dragover', (e) => { e.preventDefault(); dropOverlay.style.display = 'flex'; });
+        window.addEventListener('dragleave', (e) => { if (e.clientX === 0 && e.clientY === 0) dropOverlay.style.display = 'none'; });
+        dropOverlay.addEventListener('click', () => { dropOverlay.style.display = 'none'; });
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropOverlay.style.display = 'none';
+            if (e.dataTransfer.files.length > 0) loadImageFromBlob(e.dataTransfer.files[0]);
+        });
+
+        // Google Fonts Core Trigger
+        loadGFontBtn.addEventListener('click', () => {
+            const fontName = gFontInput.value.trim();
+            if (!fontName) return;
+
+            injectGoogleFontDOM(fontName);
+            saveFontToLocalStorage(fontName);
+            fontFamily.value = fontName;
+            
+            gFontInput.value = "";
+            syncActiveLayerFromUI();
+            setTimeout(drawAll, 800);
+        });
+
+        // Local file fonts
+        fontUploader.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fontName = file.name.split('.')[0].replace(/[^a-zA-Z0-9]/g, '');
+            const reader = new FileReader();
+            
+            reader.onload = async (event) => {
+                const fontFace = new FontFace(fontName, event.target.result);
+                try {
+                    const loadedFace = await fontFace.load();
+                    document.fonts.add(loadedFace);
+                    
+                    const option = document.createElement('option');
+                    option.value = fontName;
+                    option.textContent = `Local: ${file.name}`;
+                    fontFamily.appendChild(option);
+                    fontFamily.value = fontName;
+                    
+                    syncActiveLayerFromUI();
+                    drawAll();
+                } catch (err) {
+                    alert("Error processing your font file layout.");
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // Canvas Rendering Frame
+        function drawAll(isExportingJpg = false) {
+            if (!img.src) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // If saving as JPG, fill transparency drops with clean white base color first
+            if (isExportingJpg) {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            ctx.drawImage(img, 0, 0);
+
+            layers.forEach(layer => {
+                ctx.save();
+
+                const xPos = (layer.xPercent / 100) * canvas.width;
+                const yPos = (layer.yPercent / 100) * canvas.height;
+
+                ctx.translate(xPos, yPos);
+                ctx.rotate((layer.rotation * Math.PI) / 180);
+                ctx.globalAlpha = layer.opacity;
+
+                ctx.font = `${layer.size}px "${layer.fontFamily}"`;
+                ctx.fillStyle = layer.fontColor;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                const lines = layer.text.split('\n');
+                const lineHeight = layer.size * 1.2; 
+                const totalHeight = lineHeight * (lines.length - 1);
+                
+                lines.forEach((line, index) => {
+                    const lineY = (index * lineHeight) - (totalHeight / 2);
+                    ctx.fillText(line, 0, lineY);
+                });
+
+                if (layer.id === activeLayerId && !isExportingJpg) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 6, 0, 2 * Math.PI);
+                    ctx.fillStyle = '#6366f1';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            });
+        }
+
+        // Workspace Navigation Mouse tracking
+        function getCanvasMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+        }
+
+        function handleStart(e) {
+            if (!img.src || layers.length === 0) return;
+            const pos = getCanvasMousePos(e);
+            let closestLayer = null;
+            let minDist = 120; 
+
+            layers.forEach(layer => {
+                const lx = (layer.xPercent / 100) * canvas.width;
+                const ly = (layer.yPercent / 100) * canvas.height;
+                const dist = Math.sqrt((pos.x - lx) ** 2 + (pos.y - ly) ** 2);
+                if (dist < minDist) { minDist = dist; closestLayer = layer; }
+            });
+
+            if (closestLayer) {
+                activeLayerId = closestLayer.id;
+                isDragging = true;
+                canvasWrapper.style.cursor = 'grabbing';
+                updateEditorUI();
+                renderLayerList();
+                drawAll();
+            }
+        }
+
+        function handleMove(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            const pos = getCanvasMousePos(e);
+            const activeLayer = layers.find(l => l.id === activeLayerId);
+            if (activeLayer) {
+                activeLayer.xPercent = Math.max(0, Math.min(100, (pos.x / canvas.width) * 100));
+                activeLayer.yPercent = Math.max(0, Math.min(100, (pos.y / canvas.height) * 100));
+                drawAll();
+            }
+        }
+
+        canvasWrapper.addEventListener('mousedown', handleStart);
+        window.addEventListener('mousemove', handleMove);
+        window.addEventListener('mouseup', () => { isDragging = false; canvasWrapper.style.cursor = 'default'; });
+        canvasWrapper.addEventListener('touchstart', handleStart, { passive: false });
+        window.addEventListener('touchmove', handleMove, { passive: false });
+        window.addEventListener('touchend', () => { isDragging = false; });
+
+        // --- ENHANCED DUAL FORMAT EXPORT WORKER ---
+        exportBtn.addEventListener('click', () => {
+            if (!img.src) return;
+            
+            try {
+                const currentActiveId = activeLayerId;
+                const format = exportFormat.value; 
+                const isJpg = (format === 'image/jpeg');
+
+                activeLayerId = null; 
+                // Re-draw context with formatting updates (like background flattening for JPG format)
+                drawAll(isJpg);
+                
+                const ext = isJpg ? 'jpg' : 'png';
+                const link = document.createElement('a');
+                link.download = `watermarked_output.${ext}`;
+                link.href = canvas.toDataURL(format, isJpg ? 0.92 : undefined); // 92% compression profile quality choice on JPEG exports
+                link.click();
+                
+                // Roll back preview UI configuration states
+                activeLayerId = currentActiveId;
+                drawAll(false);
+            } catch (error) {
+                console.error("Export failed:", error);
+                alert("Security lock encountered during file processing. Please try saving the file locally on your machine and uploading it through the file selector instead.");
+            }
+        });
+        
+        // Load initial elements
+        loadSavedFontsOnStartup();
+        renderLayerList();
+    </script>
+</body>
+</html>
